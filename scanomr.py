@@ -85,6 +85,7 @@ def get_result(region,options,show_region=False):
   # print(result_arr)
   if show_region:
     plt.imshow(region)
+    plt.show()
   option_index = np.argmax(result_arr)
   if countselected > 1:
     option_index = 4
@@ -104,7 +105,6 @@ def get_roll(region,options,show_region=False):
     plt.imshow(region)
     plt.show()
   option_index = np.argmax(result_arr)
-  print(option_index)
   if countselected > 1:
     option_index = 10
   return OPTIONS_MAP_ROLL[option_index]
@@ -215,7 +215,6 @@ if __name__ == "__main__":
     df_concat = pd.DataFrame()
     for images in os.listdir("./imgdata"):
         image = io.imread(os.path.join("imgdata",images))
-        print(images)
         df = processoneimage(data,template,image,anchornumber)
         df_concat = pd.concat([df_concat, df], axis=0)
     df_concat.to_csv('output.csv', index=False)
