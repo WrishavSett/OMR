@@ -25,8 +25,11 @@ data = None
 
 def getsortedanchor(data,key="x"):
   allanchors = []
+  accesskey = "name"
   for elements in data:
-    if elements["name"] == "anchor":
+    if "type" in elements:
+       accesskey = "type"
+    if elements[accesskey] == "anchor":
       allanchors.append(elements)
   sortedanchor = sorted(allanchors, key=lambda d: d["start"][key])
   return sortedanchor
@@ -41,7 +44,12 @@ def get_template_search_area(data):
   end_point = sorted_anchor[len(sorted_anchor)-1]["end"]["y"] - 50
   return (int(start_point),int(end_point))
 
-
+def get_only_options_from_children(data_element):
+  for x in data_element["children"]:
+    if x["type"] == "number":
+      data_element["children"].remove(x)
+  return data_element
+   
 def processoneimage(data,template,image,anchornumber):
     sortedanchor = getsortedanchor(data)
     template = process_image(template)
@@ -78,23 +86,23 @@ def processoneimage(data,template,image,anchornumber):
     print(" Sorted Anchor ,", sortedanchor[anchornumber])
     print(" Calculated value ", (calculatedanchorx,calculatedanchory))
     datadict = {}
-    rollnumber = ""
-    for i in range(6,16):
-      q12md = getmetadataforblock(sortedanchor[anchornumber],data[i])
-      q = getactualcoordinates(calculatedanchorx,calculatedanchory,q12md)
-      region,options = get_image_sectionsv2(image,q)
-      selected_result = get_roll(region,options)
-      rollnumber += selected_result
-    datadict["imagename"] = rollnumber
-
-    for i in range(16,len(data)):
-        q12md = getmetadataforblock(sortedanchor[anchornumber],data[i])
+    allarr = []
+    for i in range(0,len(data)):
+      print(data[i]["name"])
+      if "children" in data[i]:
+        data_element = get_only_options_from_children(data[i])
+        q12md = getmetadataforblock(sortedanchor[anchornumber],data_element)
         q = getactualcoordinates(calculatedanchorx,calculatedanchory,q12md)
         region,options = get_image_sectionsv2(image,q)
-        selected_result = get_result(region,options)
+        print(TYPE_CONFIG[data_element["type"]]["OPTIONS"])
+        result_arr,selected_result = get_section_data(region,options,\
+                                          TYPE_CONFIG[data_element["type"]]["OPTIONS"],\
+                                          TYPE_CONFIG[data_element["type"]]["LENGTH"]) #get_roll(region,options) #get_result(region,options)
+        # rollnumber += selected_result
         datadict[q12md['name']] = selected_result
-        # print(f"{q12md['name']}-{selected_result}")
+        allarr.extend(result_arr)
     dataframe = pd.DataFrame([datadict])
+    print(allarr)
     return dataframe
 
 def process_image_api(image):
@@ -129,7 +137,7 @@ def upload_file():
 if __name__ == "__main__":
   #  app.run(debug=True)
     anchornumber = 2
-    data = readjson('payloadimgdata.json')
+    data = readjson('payload_palit.json')
     # createmetadatfile(anchornumber,data)
     # metadata = None
     # with open('metadataimgdatanewformat.json', 'r') as f:
@@ -141,5 +149,5 @@ if __name__ == "__main__":
         image = io.imread(os.path.join("imgdata",images))
         df = processoneimage(data,template,image,anchornumber)
         df_concat = pd.concat([df_concat, df], axis=0)
-    df_concat.to_csv('output.csv', index=False)
+    df_concat.to_csv('output_palit_v3.csv', index=False)
 

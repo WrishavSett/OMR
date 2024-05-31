@@ -42,11 +42,11 @@ def getactualcoordinates(calculatedanchorx,calculatedanchory,q12md):
   return q
 
 
-def get_roi_match(image_roi,template,top=True):
+def get_roi_match(image_roi,template,bottom_search_point=None,top=True):
   result = match_template(image_roi, template,pad_input=True) #added the pad_input bool
   peaks = peak_local_max(result,min_distance=10,threshold_rel=0.8) # find our peaks
   if(top == False):
-    peaks[:,0] = peaks[:,0]+1100
+    peaks[:,0] = peaks[:,0]+bottom_search_point
   return peaks
 
 def get_image_sections(image,coords):
@@ -96,24 +96,101 @@ def get_roll(region,options,show_region=False):
   multiselect = 0
   noselect = 0
   for i in options:
+    print(f"For each Option - mean {np.mean(255-i)} | length {len(i)} | division {np.mean(255-i)/len(i)}")
     result.append(np.mean(255-i))
   result_arr = np.array(result)
   # print(result_arr)
   for result_arr_element in result_arr:
     if (result_arr_element > ROLL_THRESH):
         multiselect += 1
-    if (result_arr_element < RESULT_THRESH):
+    if (result_arr_element < ROLL_THRESH):
         noselect += 1
   if show_region:
     plt.imshow(region)
     plt.show()
   option_index = np.argmax(result_arr)
-  if countselected > 1:
-    multiselect = 10
+  if multiselect > 1:
+    option_index = 10
   if noselect != (ROLLLENGTH-1) and multiselect <=1:
     option_index = 11
   return OPTIONS_MAP_ROLL[option_index]
 
+# def count_large_values(arr, threshold=2):
+#   mean = np.mean(arr)
+#   std_dev = np.std(arr)
+#   # Calculate Z-scores for each element
+#   z_scores = (arr - mean) / std_dev
+#   # Count the number of elements with Z-score above the threshold
+#   large_values_count = np.sum(z_scores > threshold)
+#   return z_scores,large_values_count
+
+# def count_large_values(arr, percentile=90):
+#   # Calculate the specified percentile of the array
+#   threshold = np.percentile(arr, percentile)
+#   # Count the number of elements greater than the threshold
+#   large_values_count = np.sum(arr > threshold)
+#   return large_values_count
+
+# def no_selected_outlier(data):
+#     data = np.array(data)
+#     Q1 = np.percentile(data, 25)
+#     Q3 = np.percentile(data, 75)
+#     IQR = Q3 - Q1
+#     lower_bound = Q1 - 1.75 * IQR
+#     upper_bound = Q3 + 1.5 * IQR
+#     outliers = data[(data < lower_bound) | (data > upper_bound)]
+#     return len(outliers)
+
+def check_single_selection(data,multiplicative_factor):
+  mean = np.mean(data)
+  std_dev = np.std(data)
+  threshold = mean + multiplicative_factor * std_dev
+  outlier_indices = np.where(data > threshold)[0]
+  return outlier_indices
+
+# def find_IQR(data):
+#   Q1 = np.percentile(data, 25)
+#   Q3 = np.percentile(data, 75)
+#   IQR = Q3 - Q1
+#   return IQR
+
+# def check_no_selected(data):
+#   original_IQR = find_IQR(data)
+#   max_index = np.argmax(data)  
+#   data_without_max = np.delete(data, max_index)
+#   new_IQR = find_IQR(data_without_max)
+#   print(f" Old IQR - {original_IQR} and new IQR {new_IQR}")
+#   if (original_IQR > (2 * new_IQR)):
+#     return False
+#   else:
+#     return True
+  
+
+def get_section_data(region,options,OPTIONS_MAP_DATA,DATALENGTH,show_region=False):
+  result = []
+  for i in options:
+    print(f"For each Option - mean {np.mean(255-i)} | option {i.shape} | division {np.mean(255-i)/len(i)}")
+    result.append(np.mean(255-i))
+  result_arr = np.array(result)
+  print(result_arr)
+  selected_indices = check_single_selection(result_arr,1.5)
+  if len(selected_indices) == 1:
+    # Only one option selected
+    print(f"Single option with index {selected_indices[0]}")
+    option_index = selected_indices[0]
+  else:
+    threshold = np.percentile(result_arr, 90)
+    outlier_indices = np.where(result_arr > threshold)[0]
+    if len(outlier_indices) == 0:
+      option_index = len(OPTIONS_MAP_DATA)-2
+      print(f"Multi options with indexs {option_index} - threshold {threshold}")
+    else:
+      option_index = len(OPTIONS_MAP_DATA)-1
+      print(f"No options with index {option_index} - threshold {threshold}")
+  if show_region:
+    plt.imshow(region)
+    plt.show()
+  return result_arr,OPTIONS_MAP_DATA[option_index]
 
 def showsectionandgetregion(image,data,calculatedanchorx,calculatedanchory,sortedanchor,anchornumber,sectionnumber):
     print(calculatedanchorx,calculatedanchory)
