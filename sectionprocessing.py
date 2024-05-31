@@ -124,12 +124,10 @@ def get_roll(region,options,show_region=False):
 #   large_values_count = np.sum(z_scores > threshold)
 #   return z_scores,large_values_count
 
-# def count_large_values(arr, percentile=90):
-#   # Calculate the specified percentile of the array
-#   threshold = np.percentile(arr, percentile)
-#   # Count the number of elements greater than the threshold
-#   large_values_count = np.sum(arr > threshold)
-#   return large_values_count
+def check_single_selectionv2(arr, threshold):
+  # Count the number of elements greater than the threshold
+  checked_option = np.where(arr > threshold)[0]
+  return checked_option
 
 # def no_selected_outlier(data):
 #     data = np.array(data)
@@ -141,12 +139,12 @@ def get_roll(region,options,show_region=False):
 #     outliers = data[(data < lower_bound) | (data > upper_bound)]
 #     return len(outliers)
 
-def check_single_selection(data,multiplicative_factor):
-  mean = np.mean(data)
-  std_dev = np.std(data)
-  threshold = mean + multiplicative_factor * std_dev
-  outlier_indices = np.where(data > threshold)[0]
-  return outlier_indices
+# def check_single_selection(data,multiplicative_factor):
+#   mean = np.mean(data)
+#   std_dev = np.std(data)
+#   threshold = mean + multiplicative_factor * std_dev
+#   outlier_indices = np.where(data > threshold)[0]
+#   return outlier_indices
 
 # def find_IQR(data):
 #   Q1 = np.percentile(data, 25)
@@ -166,31 +164,77 @@ def check_single_selection(data,multiplicative_factor):
 #     return True
   
 
-def get_section_data(region,options,OPTIONS_MAP_DATA,DATALENGTH,show_region=False):
+# def get_section_data(region,options,OPTIONS_MAP_DATA,threshold,show_region=False):
+#   result = []
+#   for i in options:
+#     print(f"For each Option - mean {np.mean(255-i)} | option {i.shape} | division {np.mean(255-i)/len(i)}")
+#     result.append(np.mean(255-i))
+#   result_arr = np.array(result)
+#   print(result_arr)
+#   selected_indices = check_single_selectionv2(result_arr,1.5)
+#   if len(selected_indices) == 1:
+#     # Only one option selected
+#     print(f"Single option with index {selected_indices[0]}")
+#     option_index = selected_indices[0]
+#   else:
+#     threshold = np.percentile(result_arr, 90)
+#     outlier_indices = np.where(result_arr > threshold)[0]
+#     if len(outlier_indices) == 0:
+#       option_index = len(OPTIONS_MAP_DATA)-2
+#       print(f"Multi options with indexs {option_index} - threshold {threshold}")
+#     else:
+#       option_index = len(OPTIONS_MAP_DATA)-1
+#       print(f"No options with index {option_index} - threshold {threshold}")
+#   if show_region:
+#     plt.imshow(region)
+#     plt.show()
+#   return result_arr,OPTIONS_MAP_DATA[option_index]
+
+def get_section_datav2(region,options,OPTIONS_MAP_DATA,threshold,show_region=False):
   result = []
   for i in options:
     print(f"For each Option - mean {np.mean(255-i)} | option {i.shape} | division {np.mean(255-i)/len(i)}")
     result.append(np.mean(255-i))
   result_arr = np.array(result)
+
   print(result_arr)
-  selected_indices = check_single_selection(result_arr,1.5)
+  selected_indices = check_single_selectionv2(result_arr,threshold)
+
   if len(selected_indices) == 1:
     # Only one option selected
     print(f"Single option with index {selected_indices[0]}")
     option_index = selected_indices[0]
+  elif len(selected_indices) == 0:
+    option_index = len(OPTIONS_MAP_DATA)-1
+    print(f"No options with index {option_index} - threshold {threshold}")
   else:
-    threshold = np.percentile(result_arr, 90)
-    outlier_indices = np.where(result_arr > threshold)[0]
-    if len(outlier_indices) == 0:
-      option_index = len(OPTIONS_MAP_DATA)-2
-      print(f"Multi options with indexs {option_index} - threshold {threshold}")
-    else:
-      option_index = len(OPTIONS_MAP_DATA)-1
-      print(f"No options with index {option_index} - threshold {threshold}")
+    option_index = len(OPTIONS_MAP_DATA)- 2
+    print(f"Multiple options with index {option_index} - threshold {threshold}")
+
   if show_region:
     plt.imshow(region)
     plt.show()
   return result_arr,OPTIONS_MAP_DATA[option_index]
+
+
+def get_threshold(data,percentile):
+  ## Remove outliers and then get the threshold
+  data = np.array(data)
+  Q1 = np.percentile(data, 25)
+  Q3 = np.percentile(data, 75)
+  IQR = Q3 - Q1
+  lower_bound = Q1 - 1.5 * IQR
+  upper_bound = Q3 + 1.5 * IQR
+  actual_data = data[(data > lower_bound) | (data < upper_bound)]
+  threshold = np.percentile(actual_data, percentile)
+  return threshold
+
+def get_section_means(options):
+  result = []
+  for i in options:
+    result.append(np.mean(255-i))
+  result_arr = np.array(result)
+  return result_arr
 
 def showsectionandgetregion(image,data,calculatedanchorx,calculatedanchory,sortedanchor,anchornumber,sectionnumber):
     print(calculatedanchorx,calculatedanchory)

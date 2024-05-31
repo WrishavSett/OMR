@@ -87,6 +87,24 @@ def processoneimage(data,template,image,anchornumber):
     print(" Calculated value ", (calculatedanchorx,calculatedanchory))
     datadict = {}
     allarr = []
+    # Computing mean for the entire image
+    for i in range(0,len(data)):
+      print(data[i]["name"])
+      if "children" in data[i]:
+        data_element = get_only_options_from_children(data[i])
+        q12md = getmetadataforblock(sortedanchor[anchornumber],data_element)
+        q = getactualcoordinates(calculatedanchorx,calculatedanchory,q12md)
+        region,options = get_image_sectionsv2(image,q)
+        result_arr = get_section_means(options)
+        allarr.extend(result_arr)
+
+
+    # Setting the global threshold for the data
+    threshold = get_threshold(allarr,80)
+    print(f" The golabl Threshold is {threshold} ")
+
+
+    # Computing the selected options
     for i in range(0,len(data)):
       print(data[i]["name"])
       if "children" in data[i]:
@@ -95,14 +113,13 @@ def processoneimage(data,template,image,anchornumber):
         q = getactualcoordinates(calculatedanchorx,calculatedanchory,q12md)
         region,options = get_image_sectionsv2(image,q)
         print(TYPE_CONFIG[data_element["type"]]["OPTIONS"])
-        result_arr,selected_result = get_section_data(region,options,\
+        result_arr,selected_result = get_section_datav2(region,options,\
                                           TYPE_CONFIG[data_element["type"]]["OPTIONS"],\
-                                          TYPE_CONFIG[data_element["type"]]["LENGTH"]) #get_roll(region,options) #get_result(region,options)
+                                          threshold) #get_roll(region,options) #get_result(region,options)
         # rollnumber += selected_result
         datadict[q12md['name']] = selected_result
-        allarr.extend(result_arr)
     dataframe = pd.DataFrame([datadict])
-    print(allarr)
+    # print(allarr)
     return dataframe
 
 def process_image_api(image):
@@ -137,17 +154,17 @@ def upload_file():
 if __name__ == "__main__":
   #  app.run(debug=True)
     anchornumber = 2
-    data = readjson('payload_palit.json')
+    data = readjson('payload.json')
     # createmetadatfile(anchornumber,data)
     # metadata = None
     # with open('metadataimgdatanewformat.json', 'r') as f:
     #   metadata = json.load(f)
-    template = io.imread("./imgdata/4.jpg")
+    template = io.imread("./imgdatanewformat/4.jpg")
     print(type(template))
     df_concat = pd.DataFrame()
-    for images in os.listdir("./imgdata"):
-        image = io.imread(os.path.join("imgdata",images))
+    for images in os.listdir("./imgdatanewformat"):
+        image = io.imread(os.path.join("imgdatanewformat",images))
         df = processoneimage(data,template,image,anchornumber)
         df_concat = pd.concat([df_concat, df], axis=0)
-    df_concat.to_csv('output_palit_v3.csv', index=False)
+    df_concat.to_csv('output_sh.csv', index=False)
 
