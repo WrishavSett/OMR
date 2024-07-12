@@ -177,7 +177,7 @@ if __name__ == "__main__":
         image = io.imread(os.path.join("imgdatanewformat",images))
         df = processoneimagefrommetadata(data,template,image,anchornumber)
         df_concat = pd.concat([df_concat, df], axis=0)
-    df_concat.to_csv('output_sh_fmd.csv', index=False)
+    df_concat.to_csv('output_sh_fmd_2.csv', index=False)
     print("--- %s seconds ---" % (time.time() - start_time))
 
 
