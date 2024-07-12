@@ -1,7 +1,7 @@
 import json
 import numpy as np
 import matplotlib.pyplot as plt
-import cv2
+import time
 from skimage import io
 from skimage.feature import match_template
 from skimage.feature import peak_local_max # new import!
@@ -25,8 +25,11 @@ data = None
 
 def getsortedanchor(data,key="x"):
   allanchors = []
+  accesskey = "name"
   for elements in data:
-    if elements["type"] == "anchor":
+    if "type" in elements:
+       accesskey = "type"
+    if elements[accesskey] == "anchor":
       allanchors.append(elements)
   sortedanchor = sorted(allanchors, key=lambda d: d["start"][key])
   return sortedanchor
@@ -41,8 +44,24 @@ def get_template_search_area(data):
   end_point = sorted_anchor[len(sorted_anchor)-1]["end"]["y"] - 50
   return (int(start_point),int(end_point))
 
+def get_only_options_from_children(data_element):
+  for x in data_element["children"]:
+    if x["type"] == "number":
+      data_element["children"].remove(x)
+  return data_element
 
-def processoneimage(data,template,image,anchornumber):
+def createmetadatfile(anchornumber,data):
+  sortedanchor = getsortedanchor(data)
+  metadatalist = []
+  for data_element in data:
+    if data_element["type"] != "anchor":
+      block_metadata = getmetadataforblock(sortedanchor[anchornumber],data_element)
+      metadatalist.append(block_metadata)
+  with open("metadata.json", "w") as outfile:
+    json.dump(metadatalist, outfile)
+
+
+def processoneimagefrommetadata(data,template,image,anchornumber):
     sortedanchor = getsortedanchor(data)
     template = process_image(template)
     template = get_template(template,sortedanchor) #template[int(sortedanchor[anchornumber]["start"]["y"]):int(sortedanchor[anchornumber]["end"]["y"]),int(sortedanchor[anchornumber]["start"]["x"]):int(sortedanchor[anchornumber]["end"]["x"])]
@@ -78,30 +97,47 @@ def processoneimage(data,template,image,anchornumber):
     print(" Sorted Anchor ,", sortedanchor[anchornumber])
     print(" Calculated value ", (calculatedanchorx,calculatedanchory))
     datadict = {}
-    rollnumber = ""
-    for i in range(6,16):
-      q12md = getmetadataforblock(sortedanchor[anchornumber],data[i])
-      q = getactualcoordinates(calculatedanchorx,calculatedanchory,q12md)
-      region,options = get_image_sectionsv2(image,q)
-      selected_result = get_roll(region,options)
-      rollnumber += selected_result
-    datadict["imagename"] = rollnumber
-
-    for i in range(16,len(data)):
-        q12md = getmetadataforblock(sortedanchor[anchornumber],data[i])
+    allarr = []
+    # Computing mean for the entire image
+    for i in range(0,len(data)):
+      print(data[i]["name"])
+      if "children" in data[i]:
+        data_element = get_only_options_from_children(data[i])
+        q12md = getmetadataforblock(sortedanchor[anchornumber],data_element)
         q = getactualcoordinates(calculatedanchorx,calculatedanchory,q12md)
         region,options = get_image_sectionsv2(image,q)
-        selected_result = get_result(region,options)
+        result_arr = get_section_means(options)
+        allarr.extend(result_arr)
+
+
+    # Setting the global threshold for the data
+    threshold = get_threshold(allarr,80)
+    print(f" The golabl Threshold is {threshold} ")
+
+
+    # Computing the selected options
+    for i in range(0,len(data)):
+      print(data[i]["name"])
+      if "children" in data[i]:
+        data_element = get_only_options_from_children(data[i])
+        q12md = getmetadataforblock(sortedanchor[anchornumber],data_element)
+        q = getactualcoordinates(calculatedanchorx,calculatedanchory,q12md)
+        region,options = get_image_sectionsv2(image,q)
+        print(TYPE_CONFIG[data_element["type"]]["OPTIONS"])
+        result_arr,selected_result = get_section_datav2(region,options,\
+                                          TYPE_CONFIG[data_element["type"]]["OPTIONS"],\
+                                          threshold) #get_roll(region,options) #get_result(region,options)
+        # rollnumber += selected_result
         datadict[q12md['name']] = selected_result
-        # print(f"{q12md['name']}-{selected_result}")
     dataframe = pd.DataFrame([datadict])
+    # print(allarr)
     return dataframe
 
 def process_image_api(image):
   anchornumber = 2
   data = readjson('payload.json')
   template = io.imread("./imgdata/4.jpg")
-  df = processoneimage(data,template,image,anchornumber)
+  df = processoneimagefrommetadata(data,template,image,anchornumber)
   return df
 
 @app.route('/upload', methods=['POST'])
@@ -124,22 +160,24 @@ def upload_file():
         
         # Convert DataFrame to JSON and return
         return df.to_json(orient="records")
-    
 
 if __name__ == "__main__":
   #  app.run(debug=True)
     anchornumber = 2
-    data = readjson('payloadimgdata.json')
+    data = readjson('payload.json')
     # createmetadatfile(anchornumber,data)
     # metadata = None
     # with open('metadataimgdatanewformat.json', 'r') as f:
     #   metadata = json.load(f)
-    template = io.imread("./imgdata/4.jpg")
+    template = io.imread("./imgdatanewformat/4.jpg")
     print(type(template))
     df_concat = pd.DataFrame()
-    for images in os.listdir("./imgdata"):
-        image = io.imread(os.path.join("imgdata",images))
-        df = processoneimage(data,template,image,anchornumber)
+    start_time = time.time()
+    for images in os.listdir("./imgdatanewformat"):
+        image = io.imread(os.path.join("imgdatanewformat",images))
+        df = processoneimagefrommetadata(data,template,image,anchornumber)
         df_concat = pd.concat([df_concat, df], axis=0)
-    df_concat.to_csv('output.csv', index=False)
+    df_concat.to_csv('output_sh_fmd.csv', index=False)
+    print("--- %s seconds ---" % (time.time() - start_time))
+
 

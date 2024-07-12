@@ -79,8 +79,8 @@ def processoneimage(data,template,image,anchornumber):
     # print(calculatedanchorx,calculatedanchory)
     # showsectionandgetregion(image,data,calculatedanchorx,calculatedanchory,sortedanchor,anchornumber,35)
 
-    if checkalignment(peaks_top,peaks_bottom) == False:
-       raise Exception("Image is not properly aligned")
+    # if checkalignment(peaks_top,peaks_bottom) == False:
+    #    raise Exception("Image is not properly aligned")
     
 
     print(" Sorted Anchor ,", sortedanchor[anchornumber])
@@ -154,17 +154,18 @@ def upload_file():
 if __name__ == "__main__":
   #  app.run(debug=True)
     anchornumber = 2
-    data = readjson('payload.json')
+    payload = 'payloadimgdata2.json'
+    data = readjson(payload)
     # createmetadatfile(anchornumber,data)
     # metadata = None
     # with open('metadataimgdatanewformat.json', 'r') as f:
     #   metadata = json.load(f)
-    template = io.imread("./imgdatanewformat/4.jpg")
+    template = io.imread("./imgdata2/101660.jpg")
     print(type(template))
     df_concat = pd.DataFrame()
-    for images in os.listdir("./imgdatanewformat"):
-        image = io.imread(os.path.join("imgdatanewformat",images))
+    for images in os.listdir("./imgdata2"):
+        image = io.imread(os.path.join("imgdata2",images))
         df = processoneimage(data,template,image,anchornumber)
         df_concat = pd.concat([df_concat, df], axis=0)
-    df_concat.to_csv('output_sh.csv', index=False)
+    df_concat.to_csv('output_pl_2.csv', index=False)
 
