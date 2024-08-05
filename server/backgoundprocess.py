@@ -14,7 +14,7 @@ class OMRProcessThread(threading.Thread):
     def __init__(self,template,template_image,data_path,type_config):
         super().__init__()
         self._stop_event = threading.Event()
-        configproducer = {'bootstrap.servers': 'localhost:9092'}
+        configproducer = {'bootstrap.servers': '185.199.53.224:9092'}
         self.producer = Producer(configproducer)
         self.path = data_path # "D:\Rohit\OMR\Research\imgdatanewformat"
         self.template = template

@@ -8,7 +8,8 @@ with open('D:\Rohit\OMR\Research\payload.json', 'r') as file_a:
 # Construct the JSON body
 payload = {
     'template': data_a,  # Assuming data_a is for the key "template"
-    'template_image': "D:/Rohit/OMR/Research/imgdatanewformat/4.jpg",  # Assuming data_b is for the key "template_image"
+    'template_image': "/app/data/imgdatanewformat/4.jpg",  # Assuming data_b is for the key "template_image"
+    'data_path' : "/app/data/imgdatanewformat",
     'type_config': {
     "Question" : {
         "OPTIONS":{0:"a",1:"b",2:"c",3:"d",4:"RR",5:"RR"},
@@ -30,7 +31,7 @@ payload = {
 }
 
 # Send POST request
-url = 'http://localhost:5000/upload'
+url = 'http://localhost:8000/upload'
 response = requests.post(url, json=payload)
 
 # Print response from server

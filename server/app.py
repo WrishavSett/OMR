@@ -31,10 +31,12 @@ def upload_file():
         return jsonify({'error': f"Missing or null fields: {', '.join(missing_fields)}"}), 400
 
 
-    data_path = "D:\Rohit\OMR\Research\imgdatanewformat"
+    data_path = body["data_path"] #"D:\Rohit\OMR\Research\imgdatanewformat"
     notification_thread = OMRProcessThread(body["template"],body["template_image"],data_path,body["type_config"]) # BackgroundThreadFactory.create('notification')
     notification_thread.start()
     logging.info("Starting thread from new ")
     return jsonify({'success': 'OK'})
-    
-app.run(debug=True)
+
+if __name__ == '__main__':
+    app.run(debug=True, port=8000)
+    # app.run(debug=True)
