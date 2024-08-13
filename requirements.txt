@@ -30,3 +30,4 @@ tifffile==2023.12.9
 tzdata==2024.1
 Werkzeug==3.0.3
 gunicorn
+flask-cors

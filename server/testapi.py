@@ -31,7 +31,7 @@ payload = {
 }
 
 # Send POST request
-url = 'http://localhost:8000/upload'
+url = 'http://185.199.53.224:8000/upload'
 response = requests.post(url, json=payload)
 
 # Print response from server

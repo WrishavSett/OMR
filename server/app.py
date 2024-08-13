@@ -2,13 +2,13 @@ import os
 import logging
 import signal
 from flask import Flask, request, jsonify
-
+from flask_cors import CORS
 from backgoundprocess import OMRProcessThread
 
 logging.basicConfig(level=logging.INFO, force=True)
 
 app = Flask(__name__)
-
+CORS(app)
 # notification_thread.start()
 
 # def sigint_handler(signum, frame):
