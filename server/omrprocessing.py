@@ -119,7 +119,7 @@ def processoneimagefrommetadata(data,template,image,anchornumber,typeconfig):
         # rollnumber += selected_result
         if selected_result == "RR":
           flag = True
-        datadict[q12md['name']] = {"result":selected_result,"flag":flag,"coord":q}
+        datadict[q12md['name']] = {"type":data_element["type"],"result":selected_result,"flag":flag,"coord":q}
     # dataframe = pd.DataFrame([datadict])
     # print(allarr)
     return datadict
