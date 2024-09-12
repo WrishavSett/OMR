@@ -31,3 +31,4 @@ tzdata==2024.1
 Werkzeug==3.0.3
 gunicorn
 flask-cors
+python-dotenv
