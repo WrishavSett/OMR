@@ -32,7 +32,12 @@ def upload_file():
 
 
     data_path = body["data_path"] #"D:\Rohit\OMR\Research\imgdatanewformat"
-    notification_thread = OMRProcessThread(body["template"],body["template_image"],data_path,body["type_config"]) # BackgroundThreadFactory.create('notification')
+    notification_thread = OMRProcessThread(body["template"],\
+                                            body["template_image"],\
+                                            data_path,\
+                                            body["type_config"],\
+                                            body["t_name"],\
+                                            body["batch_name"]) # BackgroundThreadFactory.create('notification')
     notification_thread.start()
     logging.info("Starting thread from new ")
     return jsonify({'success': 'OK'})

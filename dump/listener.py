@@ -2,7 +2,7 @@ from confluent_kafka import Consumer, KafkaError
 
 # Kafka configuration
 conf = {
-    'bootstrap.servers': '185.199.53.224:9092',   # Kafka broker(s)
+    'bootstrap.servers': '157.173.222.15:9092',   # Kafka broker(s)
     'group.id': 'my-group',                  # Consumer group id
     'auto.offset.reset': 'earliest'          # Start reading at the earliest available message
 }

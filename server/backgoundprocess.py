@@ -12,7 +12,7 @@ from skimage import io
 from dotenv import load_dotenv
 
 class OMRProcessThread(threading.Thread):
-    def __init__(self,template,template_image,data_path,type_config):
+    def __init__(self,template,template_image,data_path,type_config,template_name,batch_name):
         super().__init__()
         load_dotenv()
         self._stop_event = threading.Event()
@@ -22,6 +22,8 @@ class OMRProcessThread(threading.Thread):
         self.template = template
         self.template_image = template_image
         self.type_config = type_config
+        self.template_name = template_name
+        self.batch_name = batch_name
 
     def stop(self) -> None:
         self.producer.flush()
@@ -53,6 +55,6 @@ class OMRProcessThread(threading.Thread):
             if self.is_valid_image_extension(file):
                 image = Image.open(os.path.join(self.path,file))
                 rslt = self.process_image_api(np.array(image))
-            self.producer.produce("testtopic", json.dumps(rslt).encode('utf-8'), file, callback=self.delivery_callback)
+            key = str(self.template_name)+ "_" + str(self.batch_name) + "_" + str(file)
+            self.producer.produce("testtopic", json.dumps(rslt).encode('utf-8'), key, callback=self.delivery_callback)
             logging.info(f"File {file} send to kafka")
-

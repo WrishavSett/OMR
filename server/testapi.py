@@ -26,7 +26,9 @@ payload = {
     "Form_no_parent":{
         "OPTIONS":{0:"1",1:"2",2:"3",3:"4",4:"5",5:"6",6:"7",7:"8",8:"9",9:"10",10:"RR",11:"RR"},
         "LENGTH":10,
-    }
+    },
+    "t_name" : "Templane Name",
+    "batch_name" : "Batch Name"
 }
 }
 
