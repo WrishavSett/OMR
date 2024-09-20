@@ -22,8 +22,6 @@ class OMRProcessThread(threading.Thread):
         self.template = template
         self.template_image = template_image
         self.type_config = type_config
-        self.template_name = template_name
-        self.batch_name = batch_name
         self.processed_omr_result_id = processed_omr_result_id
 
     def stop(self) -> None:
