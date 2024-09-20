@@ -36,8 +36,6 @@ def upload_file():
                                             body["template_image"],\
                                             data_path,\
                                             body["type_config"],\
-                                            body["t_name"],\
-                                            body["batch_name"],\
                                             body["processed_omr_result_id"]) # BackgroundThreadFactory.create('notification')
     notification_thread.start()
     logging.info("Starting thread from new ")

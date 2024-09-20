@@ -12,7 +12,7 @@ from skimage import io
 from dotenv import load_dotenv
 
 class OMRProcessThread(threading.Thread):
-    def __init__(self,template,template_image,data_path,type_config,template_name,batch_name,processed_omr_result_id):
+    def __init__(self,template,template_image,data_path,type_config,processed_omr_result_id):
         super().__init__()
         load_dotenv()
         self._stop_event = threading.Event()
