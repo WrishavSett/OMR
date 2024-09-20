@@ -57,7 +57,11 @@ class OMRProcessThread(threading.Thread):
                 image = Image.open(os.path.join(self.path,file))
                 rslt = self.process_image_api(np.array(image))
             key = str(self.template_name)+ "_" + str(self.batch_name) + "_" + str(file)
-            rslt["processed_omr_result_id"] = self.processed_omr_result_id
+            
             rslt = json.dumps(rslt).encode('utf-8')
+            rslt_dict = json.loads(rslt.decode('utf-8'))
+            rslt["processed_omr_result_id"] = str(self.processed_omr_result_id)
+            rslt = json.dumps(rslt_dict).encode('utf-8')
+            
             self.producer.produce("testtopic",rslt , key, callback=self.delivery_callback)
             logging.info(f"File {file} send to kafka")
