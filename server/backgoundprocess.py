@@ -41,7 +41,7 @@ class OMRProcessThread(threading.Thread):
                 topic=msg.topic(), key=msg.key().decode('utf-8'), value=msg.value().decode('utf-8')))
     
     def process_image_api(self,image):
-        anchornumber = 2
+        anchornumber = 0
         data = self.template # readjson('D:/Rohit/OMR/Research/payload.json')
         template =  io.imread(self.template_image) #  io.imread("D:/Rohit/OMR/Research/imgdatanewformat/4.jpg")
         df = processoneimagefrommetadata(data,template,image,anchornumber,self.type_config)
