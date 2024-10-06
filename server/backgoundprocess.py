@@ -55,7 +55,11 @@ class OMRProcessThread(threading.Thread):
         for file in os.listdir(self.path):
             if self.is_valid_image_extension(file):
                 image = Image.open(os.path.join(self.path,file))
-                rslt = self.process_image_api(np.array(image))
+                try:
+                    rslt = self.process_image_api(np.array(image))
+                except Exception as e:
+                    logging.info(f"Exception {str(e)} in processing file : {file}")
+                    rslt = {"Error":f"{str(e)}"}
             # key = str(self.processed_omr_result_id)
             key = str(self.template_name)+ "_" + str(self.batch_name) + "_" + str(file)
             self.producer.produce("testtopic",json.dumps(rslt).encode('utf-8') , key, callback=self.delivery_callback)
