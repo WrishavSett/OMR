@@ -57,13 +57,22 @@ def get_image_sections(image,coords):
   d = image[coords["d"][0]:coords["d"][1],coords["d"][2]:coords["d"][3]]
   return region,[a,b,c,d]
 
+def preprocess_section_image_before_crop(image,threshold):
+  _, binary = cv2.threshold(image, threshold, 255, cv2.THRESH_BINARY_INV)
+  kernel = np.ones((3, 3), np.uint8)
+  eroded_adjusted = cv2.erode(binary, kernel, iterations=2)
+  result = cv2.bitwise_not(eroded_adjusted)
+  return result
+
 def get_image_sectionsv2(image,coords):
   optionimages = []
   for key in coords.keys():
     if key == "region":
       region = image[coords[key][0]:coords[key][1],coords[key][2]:coords[key][3]]
+      region = preprocess_section_image_before_crop(region,175)
     else:
       tmpoptionimage = image[coords[key][0]:coords[key][1],coords[key][2]:coords[key][3]]
+      tmpoptionimage = preprocess_section_image_before_crop(tmpoptionimage,175)
       optionimages.append(tmpoptionimage)
   return region,optionimages
 
@@ -216,6 +225,20 @@ def get_section_datav2(region,options,OPTIONS_MAP_DATA,threshold,show_region=Fal
     plt.show()
     print(OPTIONS_MAP_DATA[str(option_index)])
   return result_arr,OPTIONS_MAP_DATA[str(option_index)]
+
+def get_thresholdv2(rawdata,percentile):
+  non_zero_elements = sorted(set(filter(lambda x: x != 0, rawdata)))
+  data = np.array(non_zero_elements)
+  Q1 = np.percentile(data, 25)
+  Q3 = np.percentile(data, 75)
+  IQR = Q3 - Q1
+  lower_bound = Q1 - 1.5 * IQR
+  upper_bound = Q3 + 1.5 * IQR
+  actual_data = data[(data > lower_bound) | (data < upper_bound)]
+  threshold = np.percentile(actual_data, percentile)
+  return threshold
+  
+
 
 
 def get_threshold(data,percentile):

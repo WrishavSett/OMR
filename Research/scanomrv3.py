@@ -65,8 +65,8 @@ def processoneimagefrommetadata(data,template,image,anchornumber):
     sortedanchor = getsortedanchor(data)
     template = process_image(template)
     template = get_template(template,sortedanchor,anchornumber) #template[int(sortedanchor[anchornumber]["start"]["y"]):int(sortedanchor[anchornumber]["end"]["y"]),int(sortedanchor[anchornumber]["start"]["x"]):int(sortedanchor[anchornumber]["end"]["x"])]
-    # plt.imshow(template)
-    # plt.show()
+    plt.imshow(template)
+    plt.show()
     # image = io.imread("1.jpg")
     image = process_image(image)
 
@@ -111,7 +111,8 @@ def processoneimagefrommetadata(data,template,image,anchornumber):
 
 
     # Setting the global threshold for the data
-    threshold = get_threshold(allarr,80)
+    print(allarr)
+    threshold = get_thresholdv2(allarr,10)
     print(f" The golabl Threshold is {threshold} ")
 
 
@@ -166,7 +167,8 @@ if __name__ == "__main__":
 
 
     anchornumber = 2
-    data = readjson('payload.json')
+    data = readjson('./0211/payload1.json')#'payload.json'
+    #D:\Rohit\OMR\Research\29-10-2024.json
 
     # Don't uncomment
     # createmetadatfile(anchornumber,data)
@@ -174,15 +176,16 @@ if __name__ == "__main__":
     # with open('metadataimgdatanewformat.json', 'r') as f:
     #   metadata = json.load(f)
 
-    template = io.imread("./imgdatanewformat/4.jpg")
+    template = io.imread("./29102024/BE24-01-01001.jpg")
+    #D:\Rohit\OMR\Research\imgdata\4.jpg ./imgdatanewformat/4.jpg
     print(type(template))
     df_concat = pd.DataFrame()
     start_time = time.time()
-    for images in os.listdir("./imgdatanewformat"):
-        image = io.imread(os.path.join("imgdatanewformat",images))
+    for images in os.listdir("./imgdata"):
+        image = io.imread(os.path.join("imgdata",images))
         df = processoneimagefrommetadata(data,template,image,anchornumber)
         df_concat = pd.concat([df_concat, df], axis=0)
-    df_concat.to_csv('output_sh_fmd_2.csv', index=False)
+    df_concat.to_csv('output_sh_0211_imgdata_p1.csv', index=False)
     print("--- %s seconds ---" % (time.time() - start_time))
 
 

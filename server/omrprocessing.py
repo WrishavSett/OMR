@@ -99,7 +99,7 @@ def processoneimagefrommetadata(data,template,image,anchornumber,typeconfig):
 
 
     # Setting the global threshold for the data
-    threshold = get_threshold(allarr,80)
+    threshold = get_thresholdv2(allarr,10)
     print(f" The golabl Threshold is {threshold} ")
 
 

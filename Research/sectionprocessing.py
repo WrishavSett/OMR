@@ -57,13 +57,23 @@ def get_image_sections(image,coords):
   d = image[coords["d"][0]:coords["d"][1],coords["d"][2]:coords["d"][3]]
   return region,[a,b,c,d]
 
+def preprocess_section_image_before_crop(image,threshold):
+  _, binary = cv2.threshold(image, threshold, 255, cv2.THRESH_BINARY_INV)
+  kernel = np.ones((3, 3), np.uint8)
+  eroded_adjusted = cv2.erode(binary, kernel, iterations=2)
+  result = cv2.bitwise_not(eroded_adjusted)
+  return result
+
+
 def get_image_sectionsv2(image,coords):
   optionimages = []
   for key in coords.keys():
     if key == "region":
       region = image[coords[key][0]:coords[key][1],coords[key][2]:coords[key][3]]
+      region = preprocess_section_image_before_crop(region,175)
     else:
       tmpoptionimage = image[coords[key][0]:coords[key][1],coords[key][2]:coords[key][3]]
+      tmpoptionimage = preprocess_section_image_before_crop(tmpoptionimage,175)
       optionimages.append(tmpoptionimage)
   return region,optionimages
 
@@ -189,6 +199,32 @@ def check_single_selectionv2(arr, threshold):
 #     plt.imshow(region)
 #     plt.show()
 #   return result_arr,OPTIONS_MAP_DATA[option_index]
+def get_section_datav_using_median3(region,options,OPTIONS_MAP_DATA,threshold,show_region=False):
+  result = []
+  for i in options:
+    print(f"For each Option - median {np.median(255-i)} | option {i.shape} | division {np.median(255-i)/len(i)}")
+    result.append(np.median(255-i))
+  result_arr = np.array(result)
+
+  print(result_arr)
+  selected_indices = check_single_selectionv2(result_arr,threshold)
+
+  if len(selected_indices) == 1:
+    # Only one option selected
+    print(f"Single option with index {selected_indices[0]}")
+    option_index = selected_indices[0]
+  elif len(selected_indices) == 0:
+    option_index = len(OPTIONS_MAP_DATA)-1
+    print(f"No options with index {option_index} - threshold {threshold}")
+  else:
+    option_index = len(OPTIONS_MAP_DATA)- 2
+    print(f"Multiple options with index {option_index} - threshold {threshold}")
+
+  if show_region:
+    plt.imshow(region)
+    plt.show()
+  return result_arr,OPTIONS_MAP_DATA[option_index]
+
 
 def get_section_datav2(region,options,OPTIONS_MAP_DATA,threshold,show_region=False):
   result = []
@@ -216,6 +252,18 @@ def get_section_datav2(region,options,OPTIONS_MAP_DATA,threshold,show_region=Fal
     plt.show()
   return result_arr,OPTIONS_MAP_DATA[option_index]
 
+def get_thresholdv2(rawdata,percentile):
+  non_zero_elements = sorted(set(filter(lambda x: x != 0, rawdata)))
+  data = np.array(non_zero_elements)
+  Q1 = np.percentile(data, 25)
+  Q3 = np.percentile(data, 75)
+  IQR = Q3 - Q1
+  lower_bound = Q1 - 1.5 * IQR
+  upper_bound = Q3 + 1.5 * IQR
+  actual_data = data[(data > lower_bound) | (data < upper_bound)]
+  threshold = np.percentile(actual_data, percentile)
+  return threshold
+  
 
 def get_threshold(data,percentile):
   ## Remove outliers and then get the threshold
@@ -233,6 +281,13 @@ def get_section_means(options):
   result = []
   for i in options:
     result.append(np.mean(255-i))
+  result_arr = np.array(result)
+  return result_arr
+
+def get_section_median(options):
+  result = []
+  for i in options:
+    result.append(np.median(255-i))
   result_arr = np.array(result)
   return result_arr
 
