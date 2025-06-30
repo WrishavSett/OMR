@@ -9,6 +9,5 @@
 8. docker-compose build
 9. docker-compose up -d
 10. Update the `localhost` variable in the following files:
-    ```
     root/.env
     root/kafkaomr/kafka-stack-docker-compose/.env
