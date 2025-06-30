@@ -1,4 +1,3 @@
-```
 1. Open Terminal and Docker Desktop
 2. git clone https://github.com/WrishavSett/OMR
 3. cd OMR/
@@ -8,7 +7,7 @@
 7. cd ..
 8. docker-compose build
 9. docker-compose up -d
-10. Update the localhost in the following files:
-  > root/.env
-  > root/kafkaomr/kafka-stack-docker-compose/.env
-```
+10. Update the `localhost` variable in the following files:
+    ```
+    root/.env
+    root/kafkaomr/kafka-stack-docker-compose/.env
