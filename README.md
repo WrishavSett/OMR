@@ -1,3 +1,4 @@
+```
 1. Open Terminal and Docker Desktop
 2. git clone https://github.com/WrishavSett/OMR
 3. cd OMR/
