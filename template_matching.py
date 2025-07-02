@@ -4,7 +4,7 @@ import numpy as np
 import pandas as pd
 from PIL import Image
 
-def load_template_and_coords(template_path, coords_path):
+def load_template_and_coords(template_path, coords_path, class_path):
     """
     Loads the template image and its normalized anchor box coordinates.
 
@@ -23,16 +23,20 @@ def load_template_and_coords(template_path, coords_path):
         raise FileNotFoundError(f"Template image not found at: {template_path}")
     if not os.path.exists(coords_path):
         raise FileNotFoundError(f"Annotation file not found at: {coords_path}")
+    if not os.path.exists(class_path):
+        raise FileNotFoundError(f"Class file not found at: {class_path}")
 
     template = cv2.imread(template_path)
     template_h, template_w, _ = template.shape
 
     with open(coords_path, 'r') as f:
         coords = [tuple(line.split()) for line in f]
+    with open(class_path, 'r') as f:
+        classes = [class_name.strip() for class_name in f]
 
-    return template, template_h, template_w, coords
+    return template, template_h, template_w, coords, classes
 
-def detect_anchor_boxes(image_path, template, template_w, template_h, coords):
+def detect_anchor_boxes(image_path, template, template_w, template_h, coords, classes):
     """
     Detects anchor boxes in a given test image using template matching.
 
@@ -54,12 +58,9 @@ def detect_anchor_boxes(image_path, template, template_w, template_h, coords):
     image = cv2.imread(image_path)
     detected_anchor_boxes = {}
 
-    print("Detected Anchor Box Coordinates (x1, y1, x2, y2):")
-    print("Detected Anchor Box Center Point Coordinates (x, y):")
-
     for i, coord in enumerate(coords):
-        anchor_name = f"anchor_{i}"
-        _, x_center_norm, y_center_norm, width_norm, height_norm = coord
+        class_id, x_center_norm, y_center_norm, width_norm, height_norm = coord
+        class_name = classes[int(class_id)]
 
         # Calculate pixel coordinates for the anchor box in the template
         x_center_temp = int(float(x_center_norm) * template_w)
@@ -88,7 +89,7 @@ def detect_anchor_boxes(image_path, template, template_w, template_h, coords):
         center_y = int((top_left[1] + bottom_right[1]) / 2)
 
         # Store the detected box coordinates and center point
-        detected_anchor_boxes[anchor_name] = {
+        detected_anchor_boxes[class_name] = {
             "top_left": top_left,
             "bottom_right": bottom_right,
             "center": (center_x, center_y),
@@ -97,14 +98,14 @@ def detect_anchor_boxes(image_path, template, template_w, template_h, coords):
 
         # Draw a rectangle around the detected anchor box on the image
         cv2.rectangle(image, top_left, bottom_right, (255, 0, 0), 2)
-        cv2.putText(image, f"{anchor_name}: {max_val:.2f}", (top_left[0], top_left[1] - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 0, 0), 2)
+        cv2.putText(image, f"{class_name}: {max_val:.2f}", (top_left[0], top_left[1] - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 0, 0), 2)
         
         # Draw center point
         cv2.circle(image, (center_x, center_y), 5, (0, 0, 255), -1)
 
         # Print the coordinates
-        print(f"{anchor_name} Bounding Box: ({top_left[0]}, {top_left[1]}, {bottom_right[0]}, {bottom_right[1]})")
-        print(f"{anchor_name} Center Point: ({center_x}, {center_y})")
+        print(f"{class_name} Bounding Box: ({top_left[0]}, {top_left[1]}, {bottom_right[0]}, {bottom_right[1]})")
+        print(f"{class_name} Center Point: ({center_x}, {center_y})")
 
     return image, detected_anchor_boxes
 
@@ -135,21 +136,22 @@ if __name__ == "__main__":
     template_path = "./OMR/BLANK001.jpg"
     coords_path = "./OMR/BLANK001.txt"
     image_path = "./OMR/TEST/TEST-01010.jpg"
+    class_path = "./OMR/classes.txt"  # Path to the class names file
     display_width = 480  # Set your desired display width here
 
     try:
         # 1. Load the template and coordinates using a function
-        template, template_h, template_w, coords = load_template_and_coords(template_path, coords_path)
+        template, template_h, template_w, coords, classes = load_template_and_coords(template_path, coords_path, class_path)
         
         # 2. Detect anchor boxes and get the annotated image
-        annotated_image, detected_boxes = detect_anchor_boxes(image_path, template, template_w, template_h, coords)
+        annotated_image, detected_boxes = detect_anchor_boxes(image_path, template, template_w, template_h, coords, classes)
         
         # 3. Display the result
         if annotated_image is not None:
             display_image(annotated_image, "Detected Anchor Boxes", display_width=display_width)
 
         # 4. Make the detected_boxes dictionary for further processing
-        print("\nDetected Boxes Dictionary:")
+        print("\nCoordinate Dictionary:")
         for name, data in detected_boxes.items():
             print(f"{name}: {data}")
 
