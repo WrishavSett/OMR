@@ -10,6 +10,9 @@ if not os.path.exists(temp):
     os.makedirs(temp)
 
 template_image_path = "D:/OMR_DEV/T2/images/16dce875-TEST-01003.jpg"
+template_name = os.path.basename(template_image_path)
+template_name = os.path.splitext(template_name)[0]
+print(f"[INFO] Template image name: {template_name}")
 label_file_path = "D:/OMR_DEV/T2/labels/16dce875-TEST-01003.txt"
 class_file_path = "D:/OMR_DEV/T2/classes.txt"
 
@@ -189,7 +192,7 @@ for name in object_centers:
         question_data["booklet_no"][identifier] = rel
 
 # ---------- Step 5: Save relative structure to JSON ----------
-output_json = f"{temp}/question_relative_positions.json"
+output_json = f"{temp}/{template_name}_template.json"
 with open(output_json, "w") as f:
     json.dump(question_data, f, indent=2)
 
@@ -197,7 +200,10 @@ print(f"[INFO] Saved relative data to: {output_json}")
 
 # Test image details
 
-test_image_path = "D:/OMR_DEV/OMR/TEST/TEST-01009.jpg"
+test_image_path = "D:/OMR_DEV/OMR/TEST/TEST-01010.jpg"
+test_name = os.path.basename(test_image_path)
+test_name = os.path.splitext(test_name)[0]
+print(f"[INFO] Test image name: {test_name}")
 test_image = cv2.imread(test_image_path)
 cv2.imshow("Test Image", test_image)
 cv2.waitKey(0)
@@ -234,7 +240,7 @@ else:
     raise Exception("[ERROR] Not enough good matches found for homography")
 
 # ---------- Step 3: Load relative question data ----------
-with open(f"{temp}/question_relative_positions.json", "r") as f:
+with open(f"{temp}/{template_name}_template.json", "r") as f:
     question_data = json.load(f)
 
 anchor_x, anchor_y = transformed_center
@@ -419,7 +425,7 @@ final_output = {
     "booklet_number": booklet_str
 }
 
-with open(f"{temp}/marked_answers_and_ids.json", "w") as f:
+with open(f"{temp}/{test_name}_result.json", "w") as f:
     json.dump(final_output, f, indent=2)
 
-print(f"\n[INFO] Saved output to '{temp}/marked_answers_and_ids.json'")
+print(f"\n[INFO] Saved output to '{temp}/{test_name}_result.json'")
