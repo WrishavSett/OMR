@@ -197,7 +197,7 @@ print(f"[INFO] Saved relative data to: {output_json}")
 
 # Test image details
 
-test_image_path = "D:/OMR_DEV/OMR/TEST/TEST-01010.jpg"
+test_image_path = "D:/OMR_DEV/OMR/TEST/TEST-01009.jpg"
 test_image = cv2.imread(test_image_path)
 cv2.imshow("Test Image", test_image)
 cv2.waitKey(0)
