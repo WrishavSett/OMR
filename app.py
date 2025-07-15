@@ -198,8 +198,12 @@ with open(output_json, "w") as f:
 
 print(f"[INFO] Saved relative data to: {output_json}")
 
-# Test image details
 
+template_path = output_json
+print(f"[INFO] Template path: {template_path}")
+
+# ---------- Step 1: Load test image ----------
+# Test image details
 test_image_path = "D:/OMR_DEV/OMR/TEST/TEST-01010.jpg"
 test_name = os.path.basename(test_image_path)
 test_name = os.path.splitext(test_name)[0]
@@ -236,11 +240,41 @@ if len(good) > 10:
     transformed_anchor = cv2.perspectiveTransform(anchor_pt, M)
     transformed_center = tuple(map(int, transformed_anchor[0][0]))
     print(f"[INFO] Anchor_1 in test image: {transformed_center}")
+    
+    # Calculate the bounding box in the test image based on the transformed center
+    # Assuming the aspect ratio and size of the anchor box remain roughly the same
+    # We can use the dimensions from the template anchor box relative to its center
+    # Note: A more accurate approach would involve transforming all four corners of the bbox
+    template_anchor_bbox = object_boxes[anchor_name]
+    template_anchor_center = object_centers[anchor_name]
+
+    dx1 = template_anchor_bbox[0] - template_anchor_center[0]
+    dy1 = template_anchor_bbox[1] - template_anchor_center[1]
+    dx2 = template_anchor_bbox[2] - template_anchor_center[0]
+    dy2 = template_anchor_bbox[3] - template_anchor_center[1]
+
+    transformed_x1 = int(transformed_center[0] + dx1)
+    transformed_y1 = int(transformed_center[1] + dy1)
+    transformed_x2 = int(transformed_center[0] + dx2)
+    transformed_y2 = int(transformed_center[1] + dy2)
+
+    transformed_bbox = (transformed_x1, transformed_y1, transformed_x2, transformed_y2)
+    print(f"[INFO] Anchor_1 Bounding Box in test image: {transformed_bbox}")
+
+    # Draw the bounding box and center on the test image
+    test_image_with_anchor = test_image.copy()
+    cv2.rectangle(test_image_with_anchor, (transformed_x1, transformed_y1), (transformed_x2, transformed_y2), (0, 255, 0), 2)
+    cv2.circle(test_image_with_anchor, transformed_center, 5, (0, 0, 255), -1)
+    cv2.putText(test_image_with_anchor, anchor_name, (transformed_x1, transformed_y1 - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 2)
+
+    cv2.imshow("Test Image with Anchor Box Drawn",test_image_with_anchor)
+    cv2.waitKey(0)
+    cv2.destroyAllWindows()
 else:
     raise Exception("[ERROR] Not enough good matches found for homography")
 
 # ---------- Step 3: Load relative question data ----------
-with open(f"{temp}/{template_name}_template.json", "r") as f:
+with open(template_path, "r") as f:
     question_data = json.load(f)
 
 anchor_x, anchor_y = transformed_center
@@ -414,6 +448,7 @@ print("[INFO] Roll No.         :", roll_str)
 print("[INFO] Booklet No.      :", booklet_str)
 
 cv2.imshow("Result", result_image)
+cv2.imwrite(f"{temp}/{test_name}_result.png", result_image)
 cv2.waitKey(0)
 cv2.destroyAllWindows()
 
