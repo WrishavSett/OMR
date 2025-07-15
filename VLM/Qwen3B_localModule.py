@@ -119,7 +119,7 @@ def qwen_vl_local(image_path: str, category: str):
             text=[text_for_model],
             images=image_inputs,
             videos=video_inputs,
-            padding=True,
+            padding=False, # Changes from True to False for efficiency
             return_tensors="pt"
         ).to("cpu")  # Explicitly move inputs to CPU
 
@@ -128,8 +128,8 @@ def qwen_vl_local(image_path: str, category: str):
         with torch.no_grad():
             output_tokens = _model.generate(
                 **inputs,
-                max_new_tokens=512,
-                do_sample=True,
+                max_new_tokens=64, # Reduced from 512 to 64 for efficiency
+                do_sample=False,
                 temperature=0.7,
                 top_p=0.9,
                 pad_token_id=_processor.tokenizer.eos_token_id

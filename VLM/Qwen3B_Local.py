@@ -11,7 +11,8 @@ from transformers import AutoModelForVision2Seq, AutoTokenizer, AutoProcessor
 from qwen_vl_utils import process_vision_info
 
 # --- Configuration ---
-image_path = "./VLM/img.jpg" # Make sure this path is correct relative to your script or absolute.
+image_path = "" # Make sure this path is correct relative to your script or absolute.
+category = ""
 MODEL_NAME = "Qwen/Qwen2.5-VL-3B-Instruct" # Using the 3B model for CPU compatibility
 
 # --- Step 1: Load the Model and Processor Locally (CPU-focused) ---
@@ -54,13 +55,8 @@ messages = [
             {"type": "image", "image": image},
             {
                 "type": "text",
-                "text": """
-                Give me the handwritten registration number in the format:
-                {
-                  "category": "reg_no",
-                  "data": "<registration number or 'No Data'>"
-                }
-                No need for any further data.
+                "text": f"""
+                Give me ONLY the handwritten data in the format: {{"{category}":"<handwritten data or None>"}}
                 """
             }
         ]
@@ -82,7 +78,7 @@ inputs = processor(
     text=[text_for_model],
     images=image_inputs,
     videos=video_inputs,
-    padding=True,
+    padding=False,  # Changed from True to False for efficiency
     return_tensors="pt"
 ).to("cpu") # Explicitly move inputs to CPU
 
@@ -91,8 +87,8 @@ print("[INFO] Generating response.")
 with torch.no_grad():
     output_tokens = model.generate(
         **inputs,
-        max_new_tokens=512,
-        do_sample=True,
+        max_new_tokens=64, # Reduced from 512 to 64 for efficiency
+        do_sample=False,
         temperature=0.7,
         top_p=0.9,
         pad_token_id=processor.tokenizer.eos_token_id
